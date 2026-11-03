@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Attendance Clock",
-    "description": "A minimal one-line chip below the composer counting down to clock-in, lunch break and clock-out. Hover it for a settings card: adjustable times and an optional lunch-break mode."
+    "description": "A minimal phase-aware attendance chip with clock-in/lunch/clock-out countdowns, a daily overview, actual clock-out, work-hour and overtime totals, lunch mode, and optional reminders."
   }
 }

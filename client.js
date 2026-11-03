@@ -1,4 +1,4 @@
-/** @hualiyexi/attendance-clock — Client half: clock-in/lunch/clock-out countdown chip, hover settings card, lunch-break mode. */
+/** @hualiyexi/attendance-clock — Client half: phase-aware countdowns, daily overview, clock-in/out, lunch mode, overtime and reminders. */
 window.__ModuleLoader__.load({
   id: '@hualiyexi/attendance-clock',
   factory(require) {
@@ -13,9 +13,16 @@ window.__ModuleLoader__.load({
       lunchOn: false,        // 午休模式开关
       lunchStartM: 12 * 60,  // 午休开始
       lunchEndM: 13 * 60 + 30, // 午休结束
+      smartLunch: true,      // 午休前 30 分钟切换到“距午休”
+      hideRest: false,       // 休息日隐藏芯片
+      notifyLunchStart: false,
+      notifyLunchEnd: true,  // 保留旧版默认提醒
+      notifyClockOut: false,
     };
     const RING_MS = 5 * 60 * 1000; // 截止前 5 分钟开始醒目提醒
     const SOON_MS = 1 * 60 * 1000; // 截止前 1 分钟二次提醒
+    const NEAR_END_MS = 10 * 60 * 1000; // 下班前 10 分钟轻微高亮
+    const LUNCH_LEAD_MS = 30 * 60 * 1000; // 午休前 30 分钟智能切换
 
     const TONE_COLOR = {
       brand: 'var(--dsw-alias-brand-primary)',
@@ -28,48 +35,108 @@ window.__ModuleLoader__.load({
     const ZH_DICT = {
       morning: '上班倒计时',
       evening: '下班倒计时',
+      beforeLunch: '距午休',
       lunch: '午休倒计时',
+      late: '上班已逾期',
+      overtimePending: '待下班打卡',
+      overtime: '加班',
       done: '已下班',
-      absent: '缺卡',
-      rest: '休',
+      workHours: '工时 {d}',
+      absent: '今日缺卡',
+      rest: '今日休息',
+      clickClockIn: '点击打卡',
+      clickLate: '点击补卡',
       tipPre: '上班打卡截止 {t}，还剩 {d}，点击打卡',
-      tipLate: '已过 {t}，点击补卡',
-      tipAbsent: '今天没有打卡记录',
-      tipRest: '休息日',
+      tipLate: '上班已过 {t}，逾期 {d}；点击补卡',
+      tipAbsent: '今天没有上班打卡记录，点击补卡',
+      tipRest: '今日休息',
+      tipBeforeLunch: '午休将于 {t} 开始',
+      tipLunch: '午休将于 {t} 结束',
+      tipWorking: '已打卡 {inTime}，预计下班 {outTime}',
+      tipOvertime: '已到下班时间 {t}，加班 {d}；在悬浮卡片中下班打卡',
+      tipDone: '下班打卡 {t} · 工时 {d}',
       notify5: '上班打卡截止 {t}，还剩 5 分钟，快打卡！',
       notify1: '上班打卡截止 {t}，还剩 1 分钟，快打卡！',
       notifyLate: '已过 {t}，今天还没打卡',
+      notifyLunchStart: '午休将于 {t} 开始，准备收尾！',
       notifyLunchEnd: '午休将于 {t} 结束，准备上班！',
-      panelTitle: '打卡设置',
+      notifyClockOut: '下班倒计时 5 分钟，下班时间 {t}！',
+      panelTitle: '今天',
+      settingsTitle: '打卡设置',
       fieldStart: '上班时间',
       fieldEnd: '下班时间',
       fieldLunchStart: '午休开始',
       fieldLunchEnd: '午休结束',
       lunchMode: '午休模式',
-      panelHint: '时间修改立即生效，保存在本机浏览器；下班需晚于上班，午休结束需晚于午休开始。',
+      clockedAt: '已打卡 {t}',
+      notClocked: '尚未上班打卡',
+      worked: '已工作 {d}',
+      clockOutAt: '下班打卡 {t}',
+      clockOutAction: '下班打卡',
+      overtimeSummary: '加班 {d}',
+      scheduleStart: '上班 {t}',
+      scheduleEnd: '下班 {t}',
+      scheduleLunch: '午休 {a}–{b}',
+      moreOptions: '提醒与显示',
+      smartLunch: '午休前智能切换',
+      hideRest: '休息日隐藏芯片',
+      notifyLunchStartLabel: '午休开始前提醒',
+      notifyLunchEndLabel: '午休结束前提醒',
+      notifyClockOutLabel: '下班前提醒',
+      panelHint: '修改立即生效并保存在本机浏览器；下班需晚于上班，午休结束需晚于午休开始。',
       close: '关闭',
     };
     const EN_DICT = {
       morning: 'Clock-in countdown',
       evening: 'Clock-out countdown',
+      beforeLunch: 'Lunch in',
       lunch: 'Lunch countdown',
+      late: 'Clock-in overdue',
+      overtimePending: 'Clock-out pending',
+      overtime: 'Overtime',
       done: 'Off work',
-      absent: 'Missed',
-      rest: 'Off',
+      workHours: '{d} today',
+      absent: 'Clock-in missing',
+      rest: 'Off today',
+      clickClockIn: 'Click to clock in',
+      clickLate: 'Click to make up',
       tipPre: 'Clock-in deadline {t} — {d} left, click to clock in',
-      tipLate: 'Past {t} — click for a late clock-in',
-      tipAbsent: 'No clock-in record today',
-      tipRest: 'Day off',
+      tipLate: 'Clock-in was {t}, overdue by {d}; click to make up',
+      tipAbsent: 'No clock-in today; click to make up',
+      tipRest: 'Off today',
+      tipBeforeLunch: 'Lunch starts at {t}',
+      tipLunch: 'Lunch ends at {t}',
+      tipWorking: 'Clocked in at {inTime}; scheduled out at {outTime}',
+      tipOvertime: 'Scheduled out at {t}; overtime {d}. Open the hover card to clock out',
+      tipDone: 'Clocked out at {t} · {d} worked',
       notify5: 'Clock-in closes at {t} — 5 minutes left!',
       notify1: 'Clock-in closes at {t} — 1 minute left!',
       notifyLate: 'Past {t} — no clock-in yet today',
+      notifyLunchStart: 'Lunch starts at {t} — time to wrap up!',
       notifyLunchEnd: 'Lunch ends at {t} — back to work soon!',
-      panelTitle: 'Attendance settings',
+      notifyClockOut: 'Clock-out in 5 minutes, at {t}!',
+      panelTitle: 'Today',
+      settingsTitle: 'Attendance settings',
       fieldStart: 'Clock-in time',
       fieldEnd: 'Clock-out time',
       fieldLunchStart: 'Lunch start',
       fieldLunchEnd: 'Lunch end',
       lunchMode: 'Lunch mode',
+      clockedAt: 'Clocked in {t}',
+      notClocked: 'Not clocked in yet',
+      worked: '{d} worked',
+      clockOutAt: 'Clocked out {t}',
+      clockOutAction: 'Clock out',
+      overtimeSummary: 'Overtime {d}',
+      scheduleStart: 'In {t}',
+      scheduleEnd: 'Out {t}',
+      scheduleLunch: 'Lunch {a}–{b}',
+      moreOptions: 'Reminders and display',
+      smartLunch: 'Switch before lunch',
+      hideRest: 'Hide on days off',
+      notifyLunchStartLabel: 'Before lunch starts',
+      notifyLunchEndLabel: 'Before lunch ends',
+      notifyClockOutLabel: 'Before clock-out',
       panelHint: 'Changes apply immediately and stay in this browser. Clock-out must be after clock-in; lunch end after lunch start.',
       close: 'Close',
     };
@@ -104,6 +171,16 @@ window.__ModuleLoader__.load({
       '.dsw-att-toggle:focus-visible{outline:1px solid var(--dsw-alias-brand-primary)}',
       '.dsw-att-knob{position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--dsw-alias-bg-overlay);transition:left .15s}',
       '.dsw-att-toggle.on .dsw-att-knob{left:14px}',
+      '.dsw-att-overview{display:block;margin-top:6px;color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums}',
+      '.dsw-att-overview-line{display:block;margin-top:2px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums}',
+      '.dsw-att-section{display:block;margin-top:8px;font-weight:600;color:var(--dsw-alias-label-primary)}',
+      '.dsw-att-checkout{cursor:pointer;width:100%;height:26px;margin-top:8px;border:1px solid var(--dsw-alias-border-l2);border-radius:6px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);font:inherit}',
+      '.dsw-att-checkout:hover{border-color:var(--dsw-alias-brand-primary);color:var(--dsw-alias-brand-primary)}',
+      '.dsw-att-checkout:focus-visible{outline:1px solid var(--dsw-alias-brand-primary)}',
+      '.dsw-att-more{margin-top:10px;padding-top:6px;border-top:1px solid var(--dsw-alias-border-l1)}',
+      '.dsw-att-summary{cursor:pointer;color:var(--dsw-alias-label-secondary);outline:none}',
+      '.dsw-att-summary:focus-visible{outline:1px solid var(--dsw-alias-brand-primary);border-radius:3px}',
+      '@media (prefers-reduced-motion: reduce){.dsw-att-pulse,.dsw-att-panel{animation:none}.dsw-att-knob{transition:none}}',
     ].join('\n');
 
     const S = {
@@ -134,7 +211,11 @@ window.__ModuleLoader__.load({
         position: 'absolute',
         right: 0,
         bottom: 'calc(100% + 10px)',
-        minWidth: 264,
+        minWidth: 280,
+        maxWidth: 'calc(100vw - 24px)',
+        maxHeight: '70vh',
+        overflowY: 'auto',
+        boxSizing: 'border-box',
         padding: '10px 12px 11px',
         background: 'var(--dsw-alias-bg-overlay)',
         border: '1px solid var(--dsw-alias-border-l1)',
@@ -160,6 +241,16 @@ window.__ModuleLoader__.load({
       return hh + ':' + pad(mm) + ':' + pad(ss);
     }
     function fmtM(minutes) { return pad(Math.floor(minutes / 60)) + ':' + pad(minutes % 60); }
+    function fmtWork(ms) {
+      const total = Math.max(0, Math.floor(ms / 60000));
+      const hh = Math.floor(total / 60);
+      const mm = total % 60;
+      return hh > 0 ? hh + 'h' + pad(mm) + 'm' : mm + 'm';
+    }
+    function fmtTimeMs(ms) {
+      const d = new Date(ms);
+      return pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
     function dayKey(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
     function atTime(d, minutes) {
       return new Date(d.getFullYear(), d.getMonth(), d.getDate(), Math.floor(minutes / 60), minutes % 60, 0, 0).getTime();
@@ -191,7 +282,9 @@ window.__ModuleLoader__.load({
           if (o && typeof o === 'object') {
             if (isMin(o.startM)) s.startM = o.startM;
             if (isMin(o.endM)) s.endM = o.endM;
-            if (typeof o.lunchOn === 'boolean') s.lunchOn = o.lunchOn;
+            ['lunchOn', 'smartLunch', 'hideRest', 'notifyLunchStart', 'notifyLunchEnd', 'notifyClockOut'].forEach(function (key) {
+              if (typeof o[key] === 'boolean') s[key] = o[key];
+            });
             if (isMin(o.lunchStartM)) s.lunchStartM = o.lunchStartM;
             if (isMin(o.lunchEndM)) s.lunchEndM = o.lunchEndM;
           }
@@ -205,15 +298,20 @@ window.__ModuleLoader__.load({
       try { localStorage.setItem(SS_KEY, JSON.stringify(s)); } catch (err) { /* private mode etc. */ }
     }
 
-    function readClockIn(d) {
+    function readStoredMs(key) {
       try {
-        const v = localStorage.getItem('dsw-att.' + dayKey(d));
-        return v ? Number(v) : null;
+        const v = localStorage.getItem(key);
+        const ms = v ? Number(v) : 0;
+        return isFinite(ms) && ms > 0 ? ms : null;
       } catch (err) { return null; }
     }
-    function storeClockIn(d, ms) {
-      try { localStorage.setItem('dsw-att.' + dayKey(d), String(ms)); } catch (err) { /* private mode etc. */ }
+    function storeMs(key, ms) {
+      try { localStorage.setItem(key, String(ms)); } catch (err) { /* private mode etc. */ }
     }
+    function readClockIn(d) { return readStoredMs('dsw-att.' + dayKey(d)); }
+    function storeClockIn(d, ms) { storeMs('dsw-att.' + dayKey(d), ms); }
+    function readClockOut(d) { return readStoredMs('dsw-att.out.' + dayKey(d)); }
+    function storeClockOut(d, ms) { storeMs('dsw-att.out.' + dayKey(d), ms); }
 
     function requestNotifPermission() {
       try {
@@ -232,14 +330,26 @@ window.__ModuleLoader__.load({
       } catch (err) { /* unsupported */ }
     }
 
+    function overlapMs(aStart, aEnd, bStart, bEnd) {
+      return Math.max(0, Math.min(aEnd, bEnd) - Math.max(aStart, bStart));
+    }
+    // 实际工时：从上班打卡到当前/下班打卡，只扣除与打卡区间真实重叠的午休。
+    function workMsAt(now, s, clockInMs, untilMs) {
+      if (!clockInMs) return 0;
+      const finish = Math.max(clockInMs, untilMs || now.getTime());
+      let total = finish - clockInMs;
+      if (s.lunchOn && s.lunchEndM > s.lunchStartM) {
+        total -= overlapMs(clockInMs, finish, atTime(now, s.lunchStartM), atTime(now, s.lunchEndM));
+      }
+      return Math.max(0, total);
+    }
+
     /**
-     * 当天状态机（时间全部来自设置）：
-     * rest | pre(未打卡,上班前) | late(未打卡,已过上班) | working(已打卡)
-     *   working 含午休模式下的 working_am(午休前) / lunch(午休中) / working_pm(午休后)
-     *   done(已打卡且过下班) | absent(没打卡且过下班)
-     * 午休仅在 午休结束 > 午休开始 时生效；跨出上下班区间的午休自动不参与分相位。
+     * 当天状态机：rest | pre | late | working | preLunch | lunch | overtime | done | absent。
+     * done 只表示已实际下班打卡；到点但未下班打卡进入 overtime，持续累计加班。
+     * 圆环进度按实际重叠午休扣除，午休中暂停，午休结束不会倒退。
      */
-    function statusOf(now, s, clockInMs) {
+    function statusOf(now, s, clockInMs, clockOutMs) {
       const day = now.getDay();
       if (day === 0 || day === 6) return { kind: 'rest' };
       const ts = now.getTime();
@@ -250,28 +360,40 @@ window.__ModuleLoader__.load({
       const lEnd = lunchValid ? atTime(now, s.lunchEndM) : 0;
 
       if (clockInMs) {
-        if (ts >= end) return { kind: 'done', progress: 1 };
-        // 进度分母：从 min(打卡时刻, 上班) 起算；开启午休时扣除午休时长，
-        // 下午阶段进度分子同步扣除，保证下班时圆环恰好走满。
-        const breakMs = lunchValid ? Math.max(0, lEnd - lStart) : 0;
-        const spanStart = Math.min(clockInMs, start);
-        const subtract = lunchValid && ts >= lEnd ? breakMs : 0;
-        const span = Math.max(1, end - spanStart - breakMs);
-        const progress = clamp01((ts - spanStart - subtract) / span);
-        if (lunchValid && ts >= lStart && ts < lEnd) {
-          return { kind: 'lunch', remain: lEnd - ts, progress: progress, clockInMs: clockInMs, lunchValid: lunchValid };
-        }
-        return {
-          kind: 'working',
-          // 下午阶段剩余时间就是真实的墙钟差（午休已经流逝，不再扣）；只有进度分子扣午休。
-          remain: end - ts,
-          progress: progress,
+        const workMs = workMsAt(now, s, clockInMs, clockOutMs || ts);
+        const base = {
           clockInMs: clockInMs,
+          clockOutMs: clockOutMs || null,
           lunchValid: lunchValid,
+          workMs: workMs,
+          overtimeMs: Math.max(0, (clockOutMs || ts) - end),
         };
+        if (clockOutMs) return Object.assign({ kind: 'done', progress: 1 }, base);
+
+        const spanStart = Math.min(clockInMs, start);
+        const progressNow = Math.max(spanStart, Math.min(ts, end));
+        const fullBreak = lunchValid ? overlapMs(spanStart, end, lStart, lEnd) : 0;
+        const elapsedBreak = lunchValid ? overlapMs(spanStart, progressNow, lStart, lEnd) : 0;
+        const span = Math.max(1, end - spanStart - fullBreak);
+        const progress = clamp01((progressNow - spanStart - elapsedBreak) / span);
+        if (ts >= end) {
+          return Object.assign({ kind: 'overtime', remain: 0, overtimeMs: ts - end, progress: 1 }, base);
+        }
+        if (lunchValid && ts >= lStart && ts < lEnd) {
+          return Object.assign({ kind: 'lunch', remain: lEnd - ts, progress: progress }, base);
+        }
+        if (lunchValid && s.smartLunch && ts < lStart && lStart - ts <= LUNCH_LEAD_MS) {
+          return Object.assign({ kind: 'preLunch', remain: lStart - ts, progress: progress }, base);
+        }
+        return Object.assign({
+          kind: 'working',
+          remain: end - ts,
+          nearEnd: end - ts <= NEAR_END_MS,
+          progress: progress,
+        }, base);
       }
       if (ts < start) return { kind: 'pre', remain: start - ts };
-      if (ts < end) return { kind: 'late', remain: 0 };
+      if (ts < end) return { kind: 'late', remain: 0, overdueMs: ts - start };
       return { kind: 'absent' };
     }
 
@@ -299,6 +421,21 @@ window.__ModuleLoader__.load({
         className: pulse ? 'dsw-att-pulse' : undefined,
         style: Object.assign({}, S.dot, { background: color }),
       });
+    }
+
+    function Toggle(props) {
+      return h('span', {
+        className: 'dsw-att-toggle' + (props.checked ? ' on' : ''),
+        role: 'switch',
+        'aria-checked': props.checked,
+        'aria-label': props.label,
+        tabIndex: 0,
+        title: '',
+        onClick: function () { props.onChange(!props.checked); },
+        onKeyDown: function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); props.onChange(!props.checked); }
+        },
+      }, h('span', { className: 'dsw-att-knob' }));
     }
 
     /** 设置卡中的时间输入：优先原生 type=time（Chromium 78+ 支持），旧浏览器回落为 时/分 下拉。 */
@@ -361,11 +498,12 @@ window.__ModuleLoader__.load({
       function ClockChip() {
         const [now, setNow] = React.useState(function () { return new Date(); });
         const [clockIn, setClockIn] = React.useState(function () { return readClockIn(new Date()); });
+        const [clockOut, setClockOut] = React.useState(function () { return readClockOut(new Date()); });
         const [settings, setSettings] = React.useState(loadSettings);
         const [open, setOpen] = React.useState(false);
         const wrapRef = React.useRef(null);
         const openRef = React.useRef(false);
-        const timersRef = React.useRef({ openT: null, closeT: null, fired: { day: null, r5: false, r1: false, lw: false, late: false } });
+        const timersRef = React.useRef({ openT: null, closeT: null, fired: { day: null, r5: false, r1: false, lw: false, ls: false, co: false, late: false } });
 
         React.useEffect(function () { openRef.current = open; }, [open]);
 
@@ -375,8 +513,9 @@ window.__ModuleLoader__.load({
             const f = timersRef.current.fired;
             if (f.day !== dayKey(t)) {
               f.day = dayKey(t);
-              f.r5 = false; f.r1 = false; f.lw = false; f.late = false;
+              f.r5 = false; f.r1 = false; f.lw = false; f.ls = false; f.co = false; f.late = false;
               setClockIn(readClockIn(t));
+              setClockOut(readClockOut(t));
             }
             setNow(t);
           }, 1000);
@@ -398,7 +537,7 @@ window.__ModuleLoader__.load({
         }, [open]);
 
         const t = makeTranslate(ctx);
-        const st = statusOf(now, settings, clockIn);
+        const st = statusOf(now, settings, clockIn, clockOut);
         const f = timersRef.current.fired;
         const todayKey = dayKey(now);
         if (f.day !== todayKey) { f.day = todayKey; }
@@ -407,7 +546,7 @@ window.__ModuleLoader__.load({
         const lunchStartHM = fmtM(settings.lunchStartM);
         const lunchEndHM = fmtM(settings.lunchEndM);
 
-        // 截止前 5 分钟 / 1 分钟醒目提醒；过期未打卡、午休将结束各补一条。
+        // 上班提醒保持原有行为；午休和下班提醒由独立开关控制。
         if (st.kind === 'pre') {
           if (st.remain <= RING_MS && !f.r5) {
             f.r5 = true;
@@ -420,17 +559,38 @@ window.__ModuleLoader__.load({
         } else if (st.kind === 'late' && !f.late) {
           f.late = true;
           fireNotification(t('notifyLate', { t: startHM }));
-        } else if (st.kind === 'lunch' && st.remain <= RING_MS && !f.lw) {
-          f.lw = true;
-          fireNotification(t('notifyLunchEnd', { t: lunchEndHM }));
+        }
+        const nowMs = now.getTime();
+        if (clockIn && !clockOut) {
+          const untilLunch = atTime(now, settings.lunchStartM) - nowMs;
+          const untilEnd = atTime(now, settings.endM) - nowMs;
+          if (settings.notifyLunchStart && st.lunchValid && untilLunch > 0 && untilLunch <= RING_MS && !f.ls) {
+            f.ls = true;
+            fireNotification(t('notifyLunchStart', { t: lunchStartHM }));
+          }
+          if (settings.notifyLunchEnd && st.kind === 'lunch' && st.remain > 0 && st.remain <= RING_MS && !f.lw) {
+            f.lw = true;
+            fireNotification(t('notifyLunchEnd', { t: lunchEndHM }));
+          }
+          if (settings.notifyClockOut && untilEnd > 0 && untilEnd <= RING_MS && !f.co) {
+            f.co = true;
+            fireNotification(t('notifyClockOut', { t: endHM }));
+          }
         }
 
-        const clickable = st.kind === 'pre' || st.kind === 'late';
+        const clickable = st.kind === 'pre' || st.kind === 'late' || st.kind === 'absent';
         function clockInNow() {
+          if (clockIn) return;
           const t2 = new Date();
           storeClockIn(t2, t2.getTime());
           setClockIn(t2.getTime());
           requestNotifPermission();
+        }
+        function clockOutNow() {
+          if (!clockIn || clockOut) return;
+          const t2 = new Date();
+          storeClockOut(t2, t2.getTime());
+          setClockOut(t2.getTime());
         }
 
         // ---- 悬浮设置卡 ----
@@ -452,18 +612,38 @@ window.__ModuleLoader__.load({
           }, delay);
         }
         function update(patch) {
+          if (patch.notifyLunchStart === true || patch.notifyLunchEnd === true || patch.notifyClockOut === true) {
+            requestNotifPermission();
+          }
           setSettings(function (prev) {
             const next = Object.assign({}, prev, patch);
             saveSettings(next);
             return next;
           });
         }
+        function toggleRow(settingKey, labelKey, value) {
+          const label = t(labelKey);
+          return h('span', { className: 'dsw-att-row', key: settingKey },
+            h('span', { className: 'dsw-att-lab' }, label),
+            h(Toggle, { checked: value, label: label, onChange: function (next) {
+              const patch = {}; patch[settingKey] = next; update(patch);
+            } }),
+          );
+        }
 
         let panel = null;
         if (open) {
+          const overview = clockIn
+            ? t('clockedAt', { t: fmtTimeMs(clockIn) }) + ' · ' + t('worked', { d: fmtWork(st.workMs || 0) })
+            : t('notClocked');
+          const outOverview = clockOut
+            ? t('clockOutAt', { t: fmtTimeMs(clockOut) }) + (st.overtimeMs > 0 ? ' · ' + t('overtimeSummary', { d: fmtWork(st.overtimeMs) }) : '')
+            : '';
           panel = h('span', {
             className: 'dsw-att-panel',
             style: S.panel,
+            role: 'dialog',
+            'aria-label': t('settingsTitle'),
             title: '',
             onMouseEnter: function () { clearTimeout(timersRef.current.closeT); },
             onMouseLeave: function () { hoverClose(250); },
@@ -476,6 +656,19 @@ window.__ModuleLoader__.load({
                 onClick: function () { setOpen(false); },
               }, '✕'),
             ),
+            h('span', { className: 'dsw-att-overview' }, overview),
+            clockOut ? h('span', { className: 'dsw-att-overview-line' }, outOverview) : null,
+            h('span', { className: 'dsw-att-overview-line' },
+              t('scheduleStart', { t: startHM }) + ' · ' + t('scheduleEnd', { t: endHM }),
+            ),
+            settings.lunchOn ? h('span', { className: 'dsw-att-overview-line' },
+              t('scheduleLunch', { a: lunchStartHM, b: lunchEndHM }),
+            ) : null,
+            clockIn && !clockOut && st.kind !== 'rest' ? h('button', {
+              className: 'dsw-att-checkout', type: 'button', onClick: clockOutNow,
+            }, t('clockOutAction')) : null,
+            h('hr', { className: 'dsw-att-hr' }),
+            h('span', { className: 'dsw-att-section' }, t('settingsTitle')),
             h('span', { className: 'dsw-att-row' },
               h('span', { className: 'dsw-att-lab' }, t('fieldStart')),
               h(TimeField, {
@@ -490,21 +683,7 @@ window.__ModuleLoader__.load({
                 onChange: function (v) { if (v > settings.startM) update({ endM: v }); },
               }),
             ),
-            h('hr', { className: 'dsw-att-hr' }),
-            h('span', { className: 'dsw-att-row' },
-              h('span', { className: 'dsw-att-lab' }, t('lunchMode')),
-              h('span', {
-                className: 'dsw-att-toggle' + (settings.lunchOn ? ' on' : ''),
-                role: 'switch',
-                'aria-checked': settings.lunchOn,
-                tabIndex: 0,
-                title: '',
-                onClick: function () { update({ lunchOn: !settings.lunchOn }); },
-                onKeyDown: function (e) {
-                  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); update({ lunchOn: !settings.lunchOn }); }
-                },
-              }, h('span', { className: 'dsw-att-knob' })),
-            ),
+            toggleRow('lunchOn', 'lunchMode', settings.lunchOn),
             settings.lunchOn ? [
               h('span', { className: 'dsw-att-row', key: 'ls' },
                 h('span', { className: 'dsw-att-lab' }, t('fieldLunchStart')),
@@ -521,6 +700,14 @@ window.__ModuleLoader__.load({
                 }),
               ),
             ] : null,
+            h('details', { className: 'dsw-att-more' },
+              h('summary', { className: 'dsw-att-summary' }, t('moreOptions')),
+              settings.lunchOn ? toggleRow('smartLunch', 'smartLunch', settings.smartLunch) : null,
+              settings.lunchOn ? toggleRow('notifyLunchStart', 'notifyLunchStartLabel', settings.notifyLunchStart) : null,
+              settings.lunchOn ? toggleRow('notifyLunchEnd', 'notifyLunchEndLabel', settings.notifyLunchEnd) : null,
+              toggleRow('notifyClockOut', 'notifyClockOutLabel', settings.notifyClockOut),
+              toggleRow('hideRest', 'hideRest', settings.hideRest),
+            ),
             h('span', { className: 'dsw-att-hint', style: { display: 'block' } }, t('panelHint')),
           );
         }
@@ -530,25 +717,30 @@ window.__ModuleLoader__.load({
         if (st.kind === 'rest') {
           tip = t('tipRest');
           kids = [dotEl(TONE_COLOR.idle, false), h('span', { key: 'l', style: S.label }, t('rest'))];
-        } else if (st.kind === 'pre' || st.kind === 'late') {
-          const urgent = st.kind === 'late' || st.remain <= RING_MS;
-          const tone = st.kind === 'late' ? 'error' : toneOf(st.remain);
-          tip = st.kind === 'late'
-            ? t('tipLate', { t: startHM })
-            : t('tipPre', { t: startHM, d: fmtDuration(st.remain) });
-          const pulse = st.kind === 'late' || st.remain <= SOON_MS;
+        } else if (st.kind === 'pre') {
+          const tone = toneOf(st.remain);
+          const pulse = st.remain <= SOON_MS;
+          tip = t('tipPre', { t: startHM, d: fmtDuration(st.remain) });
           kids = [
             dotEl(TONE_COLOR[tone], pulse),
-            h('span', { key: 'l', className: pulse ? 'dsw-att-pulse' : undefined, style: Object.assign({}, S.label, { color: urgent ? TONE_COLOR.error : undefined }) }, t('morning')),
+            h('span', { key: 'l', className: pulse ? 'dsw-att-pulse' : undefined, style: Object.assign({}, S.label, { color: st.remain <= RING_MS ? TONE_COLOR[tone] : undefined }) }, t('morning')),
             h('strong', {
               key: 'c', className: pulse ? 'dsw-att-pulse' : undefined,
               style: Object.assign({}, S.count, { color: TONE_COLOR[tone], marginRight: 0 }),
             }, fmtDuration(st.remain)),
           ];
-        } else if (st.kind === 'lunch') {
-          tip = lunchStartHM + ' ➜ ' + endHM;
+        } else if (st.kind === 'late') {
+          tip = t('tipLate', { t: startHM, d: fmtDuration(st.overdueMs) });
           kids = [
-            h('span', { key: 'l', style: Object.assign({}, S.label, { opacity: 0.72 }) }, t('lunch')),
+            dotEl(TONE_COLOR.error, true),
+            h('span', { key: 'l', className: 'dsw-att-pulse', style: Object.assign({}, S.label, { color: TONE_COLOR.error }) }, t('late')),
+            h('strong', { key: 'c', className: 'dsw-att-pulse', style: Object.assign({}, S.count, { color: TONE_COLOR.error, marginRight: 0 }) }, fmtDuration(st.overdueMs)),
+          ];
+        } else if (st.kind === 'preLunch' || st.kind === 'lunch') {
+          const before = st.kind === 'preLunch';
+          tip = t(before ? 'tipBeforeLunch' : 'tipLunch', { t: before ? lunchStartHM : lunchEndHM });
+          kids = [
+            h('span', { key: 'l', style: Object.assign({}, S.label, { opacity: 0.72 }) }, t(before ? 'beforeLunch' : 'lunch')),
             h('strong', {
               key: 'c',
               style: Object.assign({}, S.count, { color: 'var(--dsw-alias-label-secondary)', opacity: 0.8, marginRight: 0 }),
@@ -556,27 +748,39 @@ window.__ModuleLoader__.load({
             ringSvg(st.progress, 'var(--dsw-alias-label-secondary)'),
           ];
         } else if (st.kind === 'working') {
-          const ci = new Date(st.clockInMs);
-          tip = pad(ci.getHours()) + ':' + pad(ci.getMinutes())
-            + (st.lunchValid ? ' ➜ ' + lunchStartHM + ' ➜ ' + lunchEndHM : '')
-            + ' ➜ ' + endHM;
+          const activeColor = st.nearEnd ? TONE_COLOR.brand : 'var(--dsw-alias-label-secondary)';
+          tip = t('tipWorking', { inTime: fmtTimeMs(st.clockInMs), outTime: endHM });
           kids = [
             h('span', { key: 'l', style: Object.assign({}, S.label, { opacity: 0.72 }) }, t('evening')),
             h('strong', {
               key: 'c',
-              style: Object.assign({}, S.count, { color: 'var(--dsw-alias-label-secondary)', opacity: 0.8, marginRight: 0 }),
+              style: Object.assign({}, S.count, { color: activeColor, opacity: 0.8, marginRight: 0 }),
             }, fmtDuration(st.remain)),
-            ringSvg(st.progress, 'var(--dsw-alias-label-secondary)'),
+            ringSvg(st.progress, activeColor),
+          ];
+        } else if (st.kind === 'overtime') {
+          tip = t('tipOvertime', { t: endHM, d: fmtDuration(st.overtimeMs) });
+          kids = [
+            h('span', { key: 'l', style: Object.assign({}, S.label, { color: TONE_COLOR.warn }) }, t('overtimePending')),
+            h('strong', {
+              key: 'c', style: Object.assign({}, S.count, { color: TONE_COLOR.warn, marginRight: 0 }),
+            }, t('overtime') + ' ' + fmtDuration(st.overtimeMs)),
+            ringSvg(1, TONE_COLOR.warn),
           ];
         } else if (st.kind === 'done') {
-          tip = endHM + ' ✔';
+          tip = t('tipDone', { t: fmtTimeMs(st.clockOutMs), d: fmtWork(st.workMs) });
           kids = [
-            h('span', { key: 'l', style: Object.assign({}, S.label, { color: TONE_COLOR.success }) }, t('done')),
+            h('span', { key: 'l', style: Object.assign({}, S.label, { color: TONE_COLOR.success }) }, t('done') + ' ·'),
+            h('strong', { key: 'c', style: Object.assign({}, S.count, { color: TONE_COLOR.success, marginRight: 0 }) }, t('workHours', { d: fmtWork(st.workMs) })),
             ringSvg(1, TONE_COLOR.success),
           ];
         } else { // absent
           tip = t('tipAbsent');
-          kids = [dotEl(TONE_COLOR.error, false), h('span', { key: 'l', style: Object.assign({}, S.label, { color: TONE_COLOR.error }) }, t('absent'))];
+          kids = [
+            dotEl(TONE_COLOR.error, false),
+            h('span', { key: 'l', style: Object.assign({}, S.label, { color: TONE_COLOR.error }) }, t('absent') + ' ·'),
+            h('span', { key: 'a', style: { color: TONE_COLOR.error, opacity: 0.75 } }, t('clickLate')),
+          ];
         }
 
         const chipProps = {
@@ -598,6 +802,7 @@ window.__ModuleLoader__.load({
           };
         }
 
+        if (st.kind === 'rest' && settings.hideRest) return null;
         return h('span', {
           ref: wrapRef,
           style: S.wrap,

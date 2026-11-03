@@ -16,8 +16,8 @@
         "zh": "打卡倒计时"
       },
       "description": {
-        "en": "Clock-in, lunch, and clock-out countdowns below the composer, with a hover settings card and an optional lunch-break mode.",
-        "zh": "在输入框底部显示上班、午休和下班倒计时，支持悬浮设置卡片与可选午休模式。"
+        "en": "Phase-aware attendance countdowns with a daily overview, actual clock-out, work-hour and overtime totals, lunch mode, and optional reminders.",
+        "zh": "按阶段显示考勤倒计时，支持今日概览、实际下班打卡、工时与加班统计、午休模式和独立提醒开关。"
       },
       "icon": "icon.svg",
       "author": "hualiyexi",
@@ -68,6 +68,18 @@
             "type": "git",
             "url": "https://github.com/hualiyexi/attendance-clock",
             "commit": "f3b05ea5b2da00a8480fe32f45f7e84d2eb129a0"
+          },
+          "engines": {
+            "dsh": ">=0.2.0-0 <0.3.0-0"
+          }
+        },
+        {
+          "version": "1.6.0",
+          "publishTimestamp": 1793702746,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/hualiyexi/attendance-clock",
+            "commit": "f912321076a1aa7811aaaf81237c4ac269ebb669"
           },
           "engines": {
             "dsh": ">=0.2.0-0 <0.3.0-0"

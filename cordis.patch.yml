@@ -1,0 +1,3 @@
+- insert:
+    - id: attendance-clock
+      name: '@hlyx1/attendance-clock'

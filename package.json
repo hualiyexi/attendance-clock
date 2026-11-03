@@ -1,0 +1,22 @@
+{
+  "name": "@hlyx1/attendance-clock",
+  "version": "1.2.4",
+  "private": true,
+  "description": "Clock-in/clock-out countdown chip for the DeepSeek Harness composer: click to clock in, live progress ring until 17:30.",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": ["index.js", "client.js", "cordis.patch.yml", "locale/*.json", "icon.svg"],
+  "dsh": {
+    "bundle": { "patch": "./cordis.patch.yml" },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": ["@deepseek-ai/dsh-client-ui-conversation"]
+    }
+  }
+}

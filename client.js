@@ -73,6 +73,7 @@ window.__ModuleLoader__.load({
       worked: '已工作 {d}',
       clockOutAt: '下班打卡 {t}',
       clockOutAction: '下班打卡',
+      clockOutAgain: '重新下班打卡',
       overtimeSummary: '加班 {d}',
       scheduleStart: '上班 {t}',
       scheduleEnd: '下班 {t}',
@@ -83,7 +84,7 @@ window.__ModuleLoader__.load({
       notifyLunchStartLabel: '午休开始前提醒',
       notifyLunchEndLabel: '午休结束前提醒',
       notifyClockOutLabel: '下班前提醒',
-      panelHint: '修改立即生效并保存在本机浏览器；下班需晚于上班，午休结束需晚于午休开始。',
+      panelHint: '修改立即生效并保存在本机浏览器；下班需晚于上班，午休结束需晚于午休开始。下班可重复打卡，以最后一次为准。',
       close: '关闭',
     };
     const EN_DICT = {
@@ -127,6 +128,7 @@ window.__ModuleLoader__.load({
       worked: '{d} worked',
       clockOutAt: 'Clocked out {t}',
       clockOutAction: 'Clock out',
+      clockOutAgain: 'Clock out again',
       overtimeSummary: 'Overtime {d}',
       scheduleStart: 'In {t}',
       scheduleEnd: 'Out {t}',
@@ -137,7 +139,7 @@ window.__ModuleLoader__.load({
       notifyLunchStartLabel: 'Before lunch starts',
       notifyLunchEndLabel: 'Before lunch ends',
       notifyClockOutLabel: 'Before clock-out',
-      panelHint: 'Changes apply immediately and stay in this browser. Clock-out must be after clock-in; lunch end after lunch start.',
+      panelHint: 'Changes apply immediately and stay in this browser. Clock-out must be after clock-in; lunch end after lunch start. You can clock out again; the latest time wins.',
       close: 'Close',
     };
     const DICTS = {
@@ -586,8 +588,9 @@ window.__ModuleLoader__.load({
           setClockIn(t2.getTime());
           requestNotifPermission();
         }
+        // 重复下班打卡覆盖同一日记录，工时和加班随最后一次时间重算。
         function clockOutNow() {
-          if (!clockIn || clockOut) return;
+          if (!clockIn) return;
           const t2 = new Date();
           storeClockOut(t2, t2.getTime());
           setClockOut(t2.getTime());
@@ -664,9 +667,9 @@ window.__ModuleLoader__.load({
             settings.lunchOn ? h('span', { className: 'dsw-att-overview-line' },
               t('scheduleLunch', { a: lunchStartHM, b: lunchEndHM }),
             ) : null,
-            clockIn && !clockOut && st.kind !== 'rest' ? h('button', {
+            clockIn && st.kind !== 'rest' ? h('button', {
               className: 'dsw-att-checkout', type: 'button', onClick: clockOutNow,
-            }, t('clockOutAction')) : null,
+            }, t(clockOut ? 'clockOutAgain' : 'clockOutAction')) : null,
             h('hr', { className: 'dsw-att-hr' }),
             h('span', { className: 'dsw-att-section' }, t('settingsTitle')),
             h('span', { className: 'dsw-att-row' },

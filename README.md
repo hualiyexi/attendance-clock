@@ -16,13 +16,30 @@
 
 ## 安装
 
-在 DSH 会话中让 Agent 执行（或使用插件管理界面安装本仓库克隆目录）：
+包为纯 JavaScript、无构建脚本，三种渠道任选其一（对应 DSH《打包与安装插件》规范）：
+
+**① 本地目录 / git 克隆**（改源码即时生效）——在 DSH 会话中让 Agent 执行：
 
 ```text
 plugin_manager install_bundle → <本仓库克隆路径>
 ```
 
-包管理器会把该目录链接进 profile 的 `node_modules`，修改源文件即时生效，刷新页面即可看到。
+**② tarball**（免构建授权，适合分发）：
+
+```sh
+pnpm pack                                  # 产出 attendance-clock-x.y.z.tgz
+dsh plugin --profile <名称> add ./attendance-clock-x.y.z.tgz
+```
+
+**③ GitHub 直装**：
+
+```sh
+dsh plugin --profile <名称> add github:hualiyexi/attendance-clock
+```
+
+## 兼容性
+
+manifest 声明 `engines.dsh: ">=0.2.0-0 <0.3.0-0"`：适配 DSH `0.2.x` 运行时（预发布版本也参与匹配）。版本不满足时安装/启动会明确拒绝，不会带病加载。
 
 ## 配置
 
@@ -37,11 +54,13 @@ const END_M = 30;    // 下班 · 分
 
 提醒阈值：`RING_MS`（默认截止前 5 分钟）、`SOON_MS`（前 1 分钟）。
 
+> 说明：这些是**浏览器端**参数，渲染在 Web 页面的 Client 模块不接收 cordis 行配置，因此没有做成插件 Config 字段——避免提供"可配置但不生效"的假选项；DSH 的配置规范（不同部署不同值的参数应走 Config）适用于 Host 侧插件。
+
 ## 目录结构
 
 ```text
 attendance-clock/
-├── package.json        # bundle 清单（dsh.bundle.patch + dsh.client）
+├── package.json        # bundle 清单（dsh.bundle.patch + dsh.client + engines.dsh）
 ├── cordis.patch.yml    # Loader patch：插入插件行
 ├── index.js            # Host 半（空实现，渲染在 Client）
 ├── client.js           # Client 半：芯片组件、状态机、通知、圆环

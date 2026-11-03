@@ -1,6 +1,6 @@
-/** @hlyx1/attendance-clock — Client half: minimal clock-in/out chip + progress ring right of the context ring. */
+/** @hualiyexi/attendance-clock — Client half: minimal clock-in/out chip + progress ring right of the context ring. */
 window.__ModuleLoader__.load({
-  id: '@hlyx1/attendance-clock',
+  id: '@hualiyexi/attendance-clock',
   factory(require) {
     const React = require('react');
     const h = React.createElement;

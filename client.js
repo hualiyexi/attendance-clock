@@ -107,7 +107,8 @@ window.__ModuleLoader__.load({
     ].join('\n');
 
     const S = {
-      wrap: { position: 'relative', display: 'inline-flex', flex: 'none' },
+      // 宿主 ContextMeter 是插槽外的固定兄弟节点；CSS order 让芯片在 Flex 视觉顺序中保持最右。
+      wrap: { position: 'relative', display: 'inline-flex', flex: 'none', order: 9999 },
       chip: {
         display: 'inline-flex',
         alignItems: 'center',
@@ -626,7 +627,7 @@ window.__ModuleLoader__.load({
           return ctx.slots.register({
             name: 'conversation.composer.dock',
             id: 'attendance-clock',
-            order: 9999, // 排到所有内置条目（含上下文圆环）之后（行内更靠右）
+            order: 9999, // 插槽内部排最后；固定的上下文圆环由 S.wrap.order 越过
             label: '打卡倒计时',
           }, makeChip(ctx));
         });

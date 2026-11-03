@@ -1,6 +1,6 @@
 {
   "name": "@hualiyexi/attendance-clock",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Clock-in/lunch/clock-out countdown chip for the DeepSeek Harness composer: hover settings card, adjustable times, optional lunch-break mode.",
   "type": "module",
   "license": "MIT",

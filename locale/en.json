@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Attendance Clock",
-    "description": "A minimal one-line chip below the composer counting down to the 08:30 clock-in deadline and the 17:30 clock-out."
+    "description": "A minimal one-line chip below the composer counting down to clock-in, lunch break and clock-out. Hover it for a settings card: adjustable times and an optional lunch-break mode."
   }
 }

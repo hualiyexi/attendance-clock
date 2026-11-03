@@ -1,0 +1,55 @@
+{
+  "format": 1,
+  "title": {
+    "en": "hualiyexi's DSH Plugins",
+    "zh": "华李烨希的 DSH 插件"
+  },
+  "description": {
+    "en": "Personal DeepSeek Harness plugins, installed straight from GitHub.",
+    "zh": "个人 DeepSeek Harness 插件，从 GitHub 直装。"
+  },
+  "plugins": [
+    {
+      "name": "@hualiyexi/attendance-clock",
+      "title": {
+        "en": "Attendance Clock",
+        "zh": "打卡倒计时"
+      },
+      "description": {
+        "en": "A minimal one-line chip below the composer counting down to the 08:30 clock-in deadline and the 17:30 clock-out.",
+        "zh": "在输入框底部以一行小芯片显示距上班打卡截止（08:30）和下班打卡（17:30）的倒计时。"
+      },
+      "icon": "icon.svg",
+      "author": "hualiyexi",
+      "homepage": "https://github.com/hualiyexi/attendance-clock",
+      "repository": {
+        "url": "https://github.com/hualiyexi/attendance-clock"
+      },
+      "metadata": {
+        "keywords": [
+          "打卡",
+          "考勤",
+          "attendance",
+          "clock-in",
+          "countdown",
+          "chip",
+          "composer"
+        ]
+      },
+      "versions": [
+        {
+          "version": "1.3.0",
+          "publishTimestamp": 1793686360,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/hualiyexi/attendance-clock",
+            "commit": "a01f3e764e9fbcbaa2f83a87bcf1bdf8af83da86"
+          },
+          "engines": {
+            "dsh": ">=0.2.0-0 <0.3.0-0"
+          }
+        }
+      ]
+    }
+  ]
+}

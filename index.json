@@ -48,6 +48,18 @@
           "engines": {
             "dsh": ">=0.2.0-0 <0.3.0-0"
           }
+        },
+        {
+          "version": "1.4.0",
+          "publishTimestamp": 1793692190,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/hualiyexi/attendance-clock",
+            "commit": "fb551656801b407b76bfe0bac7efe4cdb5062c43"
+          },
+          "engines": {
+            "dsh": ">=0.2.0-0 <0.3.0-0"
+          }
         }
       ]
     }

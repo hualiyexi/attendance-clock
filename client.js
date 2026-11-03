@@ -6,7 +6,7 @@ window.__ModuleLoader__.load({
     const h = React.createElement;
 
     const NS = 'attendanceClock';
-    // 默认打卡规则：工作日 08:30 前打卡上班，17:30 下班；可在悬浮设置卡中修改。
+    // 默认打卡规则：工作日 08:30 前打卡上班，17:30 下班；点击芯片打开面板修改。
     const DEFAULT_SETTINGS = {
       startM: 8 * 60 + 30,   // 上班打卡截止（分钟数 0..1439）
       endM: 17 * 60 + 30,    // 下班时间
@@ -44,16 +44,16 @@ window.__ModuleLoader__.load({
       workHours: '工时 {d}',
       absent: '今日缺卡',
       rest: '今日休息',
-      clickClockIn: '点击打卡',
-      clickLate: '点击补卡',
-      tipPre: '上班打卡截止 {t}，还剩 {d}，点击打卡',
-      tipLate: '上班已过 {t}，逾期 {d}；点击补卡',
-      tipAbsent: '今天没有上班打卡记录，点击补卡',
+      clockInAction: '上班打卡',
+      makeUpAction: '补卡',
+      tipPre: '上班打卡截止 {t}，还剩 {d}',
+      tipLate: '上班已过 {t}，逾期 {d}',
+      tipAbsent: '今天没有上班打卡记录',
       tipRest: '今日休息',
       tipBeforeLunch: '午休将于 {t} 开始',
       tipLunch: '午休将于 {t} 结束',
       tipWorking: '已打卡 {inTime}，预计下班 {outTime}',
-      tipOvertime: '已到下班时间 {t}，加班 {d}；在悬浮卡片中下班打卡',
+      tipOvertime: '已到下班时间 {t}，加班 {d}；点击芯片打开打卡面板',
       tipDone: '下班打卡 {t} · 工时 {d}',
       notify5: '上班打卡截止 {t}，还剩 5 分钟，快打卡！',
       notify1: '上班打卡截止 {t}，还剩 1 分钟，快打卡！',
@@ -99,16 +99,16 @@ window.__ModuleLoader__.load({
       workHours: '{d} today',
       absent: 'Clock-in missing',
       rest: 'Off today',
-      clickClockIn: 'Click to clock in',
-      clickLate: 'Click to make up',
-      tipPre: 'Clock-in deadline {t} — {d} left, click to clock in',
-      tipLate: 'Clock-in was {t}, overdue by {d}; click to make up',
-      tipAbsent: 'No clock-in today; click to make up',
+      clockInAction: 'Clock in',
+      makeUpAction: 'Make up clock-in',
+      tipPre: 'Clock-in deadline {t} — {d} left',
+      tipLate: 'Clock-in was {t}, overdue by {d}',
+      tipAbsent: 'No clock-in today',
       tipRest: 'Off today',
       tipBeforeLunch: 'Lunch starts at {t}',
       tipLunch: 'Lunch ends at {t}',
       tipWorking: 'Clocked in at {inTime}; scheduled out at {outTime}',
-      tipOvertime: 'Scheduled out at {t}; overtime {d}. Open the hover card to clock out',
+      tipOvertime: 'Scheduled out at {t}; overtime {d}. Click the chip to open the clock-out panel',
       tipDone: 'Clocked out at {t} · {d} worked',
       notify5: 'Clock-in closes at {t} — 5 minutes left!',
       notify1: 'Clock-in closes at {t} — 1 minute left!',
@@ -152,20 +152,17 @@ window.__ModuleLoader__.load({
 
     const CSS = [
       '@keyframes dsw-att-pulse{0%,100%{opacity:1}50%{opacity:.3}}',
-      '@keyframes dsw-att-pop{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}',
       '.dsw-att-pulse{animation:dsw-att-pulse 1s ease-in-out infinite}',
-      '.dsw-att-btn{cursor:pointer}',
-      '.dsw-att-btn:hover{background:var(--dsw-alias-bg-layer-2)}',
-      '.dsw-att-btn:focus-visible{outline:1px solid var(--dsw-alias-brand-primary)}',
-      '.dsw-att-panel{animation:dsw-att-pop .12s ease-out}',
-      '.dsw-att-head{display:flex;align-items:center;justify-content:space-between;gap:10px}',
-      '.dsw-att-title{font-weight:600;color:var(--dsw-alias-label-primary)}',
-      '.dsw-att-x{cursor:pointer;border:none;background:transparent;color:var(--dsw-alias-label-secondary);font-size:13px;line-height:1;padding:2px 5px;border-radius:4px}',
-      '.dsw-att-x:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2)}',
+      // 与 ContextMeter.trigger 相同：字体、间距、圆角、悬浮和展开底色。
+      '.dsw-att-btn{border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-tertiary);font-family:inherit;font-size:var(--dsh-content-font-size-secondary,13px);font-variant-numeric:tabular-nums;line-height:calc(20px + var(--dsh-content-font-delta-secondary,0px));white-space:nowrap;cursor:pointer;background:0 0;border:1px solid transparent;flex:none;align-items:center;gap:6px;padding:0 7px;display:inline-flex}',
+      '.dsw-att-btn:hover,.dsw-att-btn[aria-expanded=true]{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}',
+      '.dsw-att-btn:focus-visible{outline:1px solid var(--dsw-alias-brand-primary);outline-offset:1px}',
+      '.dsw-att-head{display:flex;align-items:center;justify-content:space-between;gap:6px}',
+      '.dsw-att-title{font-weight:500;color:var(--dsw-alias-label-primary)}',
       '.dsw-att-hr{border:none;border-top:1px solid var(--dsw-alias-border-l1);margin:10px 0 2px}',
       '.dsw-att-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px}',
       '.dsw-att-lab{color:var(--dsw-alias-label-primary)}',
-      '.dsw-att-input{font-size:12px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l2);border-radius:6px;padding:1px 4px;height:22px;outline:none}',
+      '.dsw-att-input{font:inherit;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover);border:1px solid var(--dsw-alias-border-l1);border-radius:var(--dsw-radius-sm);padding:1px 4px;height:24px;outline:none}',
       '.dsw-att-input:focus{border-color:var(--dsw-alias-brand-primary)}',
       '.dsw-att-hint{margin-top:10px;color:var(--dsw-alias-label-secondary);opacity:.8}',
       '.dsw-att-toggle{position:relative;width:28px;height:16px;border-radius:999px;background:var(--dsw-alias-label-secondary);opacity:.4;cursor:pointer;flex:none;transition:background .15s,opacity .15s}',
@@ -175,62 +172,52 @@ window.__ModuleLoader__.load({
       '.dsw-att-toggle.on .dsw-att-knob{left:14px}',
       '.dsw-att-overview{display:block;margin-top:6px;color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums}',
       '.dsw-att-overview-line{display:block;margin-top:2px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums}',
-      '.dsw-att-section{display:block;margin-top:8px;font-weight:600;color:var(--dsw-alias-label-primary)}',
-      '.dsw-att-checkout{cursor:pointer;width:100%;height:26px;margin-top:8px;border:1px solid var(--dsw-alias-border-l2);border-radius:6px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);font:inherit}',
-      '.dsw-att-checkout:hover{border-color:var(--dsw-alias-brand-primary);color:var(--dsw-alias-brand-primary)}',
+      '.dsw-att-section{display:block;margin-top:8px;font-weight:500;color:var(--dsw-alias-label-primary)}',
+      '.dsw-att-checkout{cursor:pointer;width:100%;height:28px;margin-top:10px;border:0;border-radius:var(--dsw-radius-sm);background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary);font:inherit}',
+      '.dsw-att-checkout:hover{background:var(--dsw-alias-bg-layer-2)}',
       '.dsw-att-checkout:focus-visible{outline:1px solid var(--dsw-alias-brand-primary)}',
       '.dsw-att-more{margin-top:10px;padding-top:6px;border-top:1px solid var(--dsw-alias-border-l1)}',
       '.dsw-att-summary{cursor:pointer;color:var(--dsw-alias-label-secondary);outline:none}',
       '.dsw-att-summary:focus-visible{outline:1px solid var(--dsw-alias-brand-primary);border-radius:3px}',
-      '@media (prefers-reduced-motion: reduce){.dsw-att-pulse,.dsw-att-panel{animation:none}.dsw-att-knob{transition:none}}',
+      '@media (prefers-reduced-motion: reduce){.dsw-att-pulse{animation:none}.dsw-att-knob{transition:none}}',
     ].join('\n');
 
     const S = {
       // 宿主 ContextMeter 是插槽外的固定兄弟节点；CSS order 让芯片在 Flex 视觉顺序中保持最右。
       wrap: { position: 'relative', display: 'inline-flex', flex: 'none', order: 9999 },
       chip: {
-        display: 'inline-flex',
-        alignItems: 'center',
-        height: 20,
-        padding: 0,
-        margin: 0,
-        borderRadius: 999,
-        fontSize: 12,
-        lineHeight: '20px',
-        color: 'var(--dsw-alias-label-secondary)',
-        fontVariantNumeric: 'tabular-nums',
-        whiteSpace: 'nowrap',
-        flex: 'none',
-        background: 'transparent',
-        border: 'none',
+        display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0 7px', margin: 0,
+        borderRadius: 'var(--dsw-radius-sm)', fontFamily: 'inherit',
+        fontSize: 'var(--dsh-content-font-size-secondary,13px)',
+        lineHeight: 'calc(20px + var(--dsh-content-font-delta-secondary,0px))',
+        color: 'var(--dsw-alias-label-tertiary)', fontVariantNumeric: 'tabular-nums',
+        whiteSpace: 'nowrap', flex: 'none', background: 'transparent', border: '1px solid transparent', cursor: 'pointer',
       },
-      chipBtn: { padding: '0 6px' },
-      dot: { width: 6, height: 6, borderRadius: '50%', marginRight: 6, flexShrink: 0 },
-      label: { marginRight: 5 },
-      count: { fontWeight: 600, marginRight: 6 },
-      ring: { display: 'block', flexShrink: 0, marginLeft: 7, marginTop: 1 },
+      dot: { width: 6, height: 6, borderRadius: '50%', flexShrink: 0 },
+      label: {},
+      count: { fontWeight: 400 },
+      ring: { display: 'block', flexShrink: 0 },
+      // 与 ContextMeter.panel 相同：固定定位、菜单材质、264px、8px 锚点间距。
       panel: {
-        position: 'absolute',
-        right: 0,
-        bottom: 'calc(100% + 10px)',
-        minWidth: 280,
-        maxWidth: 'calc(100vw - 24px)',
-        maxHeight: '70vh',
-        overflowY: 'auto',
-        boxSizing: 'border-box',
-        padding: '10px 12px 11px',
-        background: 'var(--dsw-alias-bg-overlay)',
-        border: '1px solid var(--dsw-alias-border-l1)',
-        borderRadius: 10,
-        boxShadow: '0 6px 24px rgba(0,0,0,.22)',
-        zIndex: 1000,
-        fontSize: 12,
-        lineHeight: '20px',
-        color: 'var(--dsw-alias-label-primary)',
-        textAlign: 'left',
-        whiteSpace: 'normal',
+        position: 'fixed', zIndex: 1100, boxSizing: 'border-box', width: 264,
+        maxWidth: 'calc(100vw - 24px)', maxHeight: '70vh', overflowY: 'auto',
+        borderRadius: 'var(--dsw-radius-lg)', background: 'var(--dsw-specific-menu)',
+        backdropFilter: 'var(--dsw-menu-backdrop-filter)',
+        '--dsw-elevation-stroke-color': 'var(--dsw-alias-border-l1)',
+        boxShadow: 'var(--dsw-elevation-prominent)', color: 'var(--dsw-alias-label-secondary)',
+        cursor: 'default', border: 0, padding: 12, fontSize: 12, lineHeight: '20px',
+        fontFamily: 'inherit', textAlign: 'left', whiteSpace: 'normal',
       },
-      inputTime: { width: 74 },
+      tooltip: {
+        position: 'fixed', zIndex: 1200, boxSizing: 'border-box', maxWidth: 280,
+        borderRadius: 'var(--dsw-radius-sm)', background: 'var(--dsw-specific-menu)',
+        backdropFilter: 'var(--dsw-menu-backdrop-filter)',
+        '--dsw-elevation-stroke-color': 'var(--dsw-alias-border-l1)',
+        boxShadow: 'var(--dsw-elevation-prominent)', color: 'var(--dsw-alias-label-secondary)',
+        padding: '4px 8px', fontSize: 12, lineHeight: '18px', fontFamily: 'inherit',
+        pointerEvents: 'none', whiteSpace: 'normal',
+      },
+      inputTime: { width: 82 },
       inputSel: { width: 56 },
     };
 
@@ -399,22 +386,20 @@ window.__ModuleLoader__.load({
       return { kind: 'absent' };
     }
 
+    // 与 ContextMeter 相同的 14px / viewBox 14 / 2px 圆环；仅状态色由考勤语义提供。
     function ringSvg(progress, color) {
-      const r = 5;
+      const r = 5.5;
       const c = 2 * Math.PI * r;
       const p = clamp01(progress);
       return h('svg', {
-        width: 13, height: 13, viewBox: '0 0 16 16', style: S.ring, 'aria-hidden': true,
+        width: 14, height: 14, viewBox: '0 0 14 14', style: S.ring, 'aria-hidden': true,
       },
-        // 未激活轨道：中性灰降低不透明度，避免过暗
-        h('circle', { cx: 8, cy: 8, r: r, fill: 'none', stroke: 'var(--dsw-alias-label-secondary)', 'stroke-width': 2.5, opacity: 0.28 }),
-        // 激活弧：柔和的中性灰，透明度压低避免刺眼
+        h('circle', { cx: 7, cy: 7, r: r, fill: 'none', stroke: 'var(--dsw-alias-border-l3)', 'stroke-width': 2 }),
         h('circle', {
-          cx: 8, cy: 8, r: r, fill: 'none', stroke: color, 'stroke-width': 2.5, 'stroke-linecap': 'round',
-          opacity: 0.62,
-          'stroke-dasharray': c, 'stroke-dashoffset': c * (1 - p),
-          transform: 'rotate(-90 8 8)',
-          style: { transition: 'stroke-dashoffset 1s linear' },
+          cx: 7, cy: 7, r: r, fill: 'none', stroke: color || 'var(--dsw-alias-label-tertiary)',
+          'stroke-width': 2, 'stroke-linecap': 'round',
+          'stroke-dasharray': (c * p) + ' ' + c,
+          transform: 'rotate(-90 7 7)',
         }),
       );
     }
@@ -496,6 +481,41 @@ window.__ModuleLoader__.load({
       };
     }
 
+    // ContextMeter 同款顶部锚定：gap 8、viewport margin 12；空间不足时转到下方。
+    function useFloatingPosition(open, anchorRef, floatingRef, align) {
+      const [position, setPosition] = React.useState(null);
+      React.useLayoutEffect(function () {
+        if (!open) { setPosition(null); return undefined; }
+        function update() {
+          const anchor = anchorRef.current;
+          const floating = floatingRef.current;
+          if (!anchor || !floating) return;
+          const a = anchor.getBoundingClientRect();
+          const f = floating.getBoundingClientRect();
+          const margin = 12;
+          const gap = 8;
+          const desiredLeft = align === 'center' ? a.left + a.width / 2 - f.width / 2 : a.right - f.width;
+          const left = Math.max(margin, Math.min(window.innerWidth - f.width - margin, desiredLeft));
+          let top = a.top - f.height - gap;
+          if (top < margin) top = a.bottom + gap;
+          top = Math.max(margin, Math.min(window.innerHeight - f.height - margin, top));
+          setPosition({ left: Math.round(left), top: Math.round(top) });
+        }
+        update();
+        window.addEventListener('resize', update);
+        window.addEventListener('scroll', update, true);
+        const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+        if (observer && anchorRef.current) observer.observe(anchorRef.current);
+        if (observer && floatingRef.current) observer.observe(floatingRef.current);
+        return function () {
+          window.removeEventListener('resize', update);
+          window.removeEventListener('scroll', update, true);
+          if (observer) observer.disconnect();
+        };
+      }, [open, align, anchorRef, floatingRef]);
+      return position;
+    }
+
     function makeChip(ctx) {
       function ClockChip() {
         const [now, setNow] = React.useState(function () { return new Date(); });
@@ -503,11 +523,12 @@ window.__ModuleLoader__.load({
         const [clockOut, setClockOut] = React.useState(function () { return readClockOut(new Date()); });
         const [settings, setSettings] = React.useState(loadSettings);
         const [open, setOpen] = React.useState(false);
+        const [tooltipOpen, setTooltipOpen] = React.useState(false);
         const wrapRef = React.useRef(null);
-        const openRef = React.useRef(false);
-        const timersRef = React.useRef({ openT: null, closeT: null, fired: { day: null, r5: false, r1: false, lw: false, ls: false, co: false, late: false } });
-
-        React.useEffect(function () { openRef.current = open; }, [open]);
+        const triggerRef = React.useRef(null);
+        const panelRef = React.useRef(null);
+        const tooltipRef = React.useRef(null);
+        const timersRef = React.useRef({ tooltipT: null, fired: { day: null, r5: false, r1: false, lw: false, ls: false, co: false, late: false } });
 
         React.useEffect(function () {
           const id = setInterval(function () {
@@ -523,21 +544,37 @@ window.__ModuleLoader__.load({
           }, 1000);
           return function () {
             clearInterval(id);
-            clearTimeout(timersRef.current.openT);
-            clearTimeout(timersRef.current.closeT);
+            clearTimeout(timersRef.current.tooltipT);
           };
         }, []);
 
-        // 点击设置卡以外区域时关闭
+        // 与 ContextMeter 一致：外部 pointer 关闭，Escape 关闭并归还焦点。
         React.useEffect(function () {
           if (!open) return undefined;
-          function onDoc(e) {
+          function onPointerDown(e) {
             if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
           }
-          document.addEventListener('mousedown', onDoc, true);
-          return function () { document.removeEventListener('mousedown', onDoc, true); };
+          function onKeyDown(e) {
+            if (e.key === 'Escape') {
+              setOpen(false);
+              if (triggerRef.current) triggerRef.current.focus();
+            }
+          }
+          document.addEventListener('pointerdown', onPointerDown, true);
+          document.addEventListener('keydown', onKeyDown);
+          return function () {
+            document.removeEventListener('pointerdown', onPointerDown, true);
+            document.removeEventListener('keydown', onKeyDown);
+          };
+        }, [open]);
+        React.useEffect(function () {
+          if (!open) return;
+          clearTimeout(timersRef.current.tooltipT);
+          setTooltipOpen(false);
         }, [open]);
 
+        const panelPosition = useFloatingPosition(open, wrapRef, panelRef, 'end');
+        const tooltipPosition = useFloatingPosition(tooltipOpen && !open, wrapRef, tooltipRef, 'center');
         const t = makeTranslate(ctx);
         const st = statusOf(now, settings, clockIn, clockOut);
         const f = timersRef.current.fired;
@@ -580,7 +617,6 @@ window.__ModuleLoader__.load({
           }
         }
 
-        const clickable = st.kind === 'pre' || st.kind === 'late' || st.kind === 'absent';
         function clockInNow() {
           if (clockIn) return;
           const t2 = new Date();
@@ -596,23 +632,15 @@ window.__ModuleLoader__.load({
           setClockOut(t2.getTime());
         }
 
-        // ---- 悬浮设置卡 ----
-        function hoverOpen() {
-          clearTimeout(timersRef.current.closeT);
-          clearTimeout(timersRef.current.openT);
-          timersRef.current.openT = setTimeout(function () { setOpen(true); }, 150);
+        // 悬浮只显示 Tooltip（200ms），不再自动展开设置。
+        function showTooltip() {
+          if (open) return;
+          clearTimeout(timersRef.current.tooltipT);
+          timersRef.current.tooltipT = setTimeout(function () { setTooltipOpen(true); }, 200);
         }
-        function hoverClose(delay) {
-          clearTimeout(timersRef.current.openT);
-          clearTimeout(timersRef.current.closeT);
-          timersRef.current.closeT = setTimeout(function check() {
-            // 面板内仍有聚焦字段（含原生时间选择器的弹层）时保持打开
-            if (wrapRef.current && wrapRef.current.contains(document.activeElement)) {
-              timersRef.current.closeT = setTimeout(check, 200);
-            } else {
-              setOpen(false);
-            }
-          }, delay);
+        function hideTooltip() {
+          clearTimeout(timersRef.current.tooltipT);
+          setTooltipOpen(false);
         }
         function update(patch) {
           if (patch.notifyLunchStart === true || patch.notifyLunchEnd === true || patch.notifyClockOut === true) {
@@ -642,22 +670,15 @@ window.__ModuleLoader__.load({
           const outOverview = clockOut
             ? t('clockOutAt', { t: fmtTimeMs(clockOut) }) + (st.overtimeMs > 0 ? ' · ' + t('overtimeSummary', { d: fmtWork(st.overtimeMs) }) : '')
             : '';
-          panel = h('span', {
+          panel = h('div', {
+            ref: panelRef,
             className: 'dsw-att-panel',
-            style: S.panel,
+            style: Object.assign({}, S.panel, panelPosition || { visibility: 'hidden', left: 0, top: 0 }),
             role: 'dialog',
             'aria-label': t('settingsTitle'),
-            title: '',
-            onMouseEnter: function () { clearTimeout(timersRef.current.closeT); },
-            onMouseLeave: function () { hoverClose(250); },
-            onKeyDown: function (e) { if (e.key === 'Escape') setOpen(false); },
           },
-            h('span', { className: 'dsw-att-head' },
+            h('div', { className: 'dsw-att-head' },
               h('span', { className: 'dsw-att-title' }, t('panelTitle')),
-              h('button', {
-                className: 'dsw-att-x', type: 'button', 'aria-label': t('close'), title: '',
-                onClick: function () { setOpen(false); },
-              }, '✕'),
             ),
             h('span', { className: 'dsw-att-overview' }, overview),
             clockOut ? h('span', { className: 'dsw-att-overview-line' }, outOverview) : null,
@@ -667,6 +688,9 @@ window.__ModuleLoader__.load({
             settings.lunchOn ? h('span', { className: 'dsw-att-overview-line' },
               t('scheduleLunch', { a: lunchStartHM, b: lunchEndHM }),
             ) : null,
+            !clockIn && st.kind !== 'rest' ? h('button', {
+              className: 'dsw-att-checkout', type: 'button', onClick: clockInNow,
+            }, t(st.kind === 'pre' ? 'clockInAction' : 'makeUpAction')) : null,
             clockIn && st.kind !== 'rest' ? h('button', {
               className: 'dsw-att-checkout', type: 'button', onClick: clockOutNow,
             }, t(clockOut ? 'clockOutAgain' : 'clockOutAction')) : null,
@@ -743,21 +767,21 @@ window.__ModuleLoader__.load({
           const before = st.kind === 'preLunch';
           tip = t(before ? 'tipBeforeLunch' : 'tipLunch', { t: before ? lunchStartHM : lunchEndHM });
           kids = [
-            h('span', { key: 'l', style: Object.assign({}, S.label, { opacity: 0.72 }) }, t(before ? 'beforeLunch' : 'lunch')),
+            h('span', { key: 'l', style: S.label }, t(before ? 'beforeLunch' : 'lunch')),
             h('strong', {
               key: 'c',
-              style: Object.assign({}, S.count, { color: 'var(--dsw-alias-label-secondary)', opacity: 0.8, marginRight: 0 }),
+              style: Object.assign({}, S.count, { color: 'var(--dsw-alias-label-tertiary)' }),
             }, fmtDuration(st.remain)),
-            ringSvg(st.progress, 'var(--dsw-alias-label-secondary)'),
+            ringSvg(st.progress, 'var(--dsw-alias-label-tertiary)'),
           ];
         } else if (st.kind === 'working') {
-          const activeColor = st.nearEnd ? TONE_COLOR.brand : 'var(--dsw-alias-label-secondary)';
+          const activeColor = st.nearEnd ? TONE_COLOR.brand : 'var(--dsw-alias-label-tertiary)';
           tip = t('tipWorking', { inTime: fmtTimeMs(st.clockInMs), outTime: endHM });
           kids = [
-            h('span', { key: 'l', style: Object.assign({}, S.label, { opacity: 0.72 }) }, t('evening')),
+            h('span', { key: 'l', style: S.label }, t('evening')),
             h('strong', {
               key: 'c',
-              style: Object.assign({}, S.count, { color: activeColor, opacity: 0.8, marginRight: 0 }),
+              style: Object.assign({}, S.count, { color: activeColor }),
             }, fmtDuration(st.remain)),
             ringSvg(st.progress, activeColor),
           ];
@@ -781,38 +805,34 @@ window.__ModuleLoader__.load({
           tip = t('tipAbsent');
           kids = [
             dotEl(TONE_COLOR.error, false),
-            h('span', { key: 'l', style: Object.assign({}, S.label, { color: TONE_COLOR.error }) }, t('absent') + ' ·'),
-            h('span', { key: 'a', style: { color: TONE_COLOR.error, opacity: 0.75 } }, t('clickLate')),
+            h('span', { key: 'l', style: Object.assign({}, S.label, { color: TONE_COLOR.error }) }, t('absent')),
           ];
         }
 
         const chipProps = {
-          className: clickable ? 'dsw-att-btn' : undefined,
-          style: clickable ? Object.assign({}, S.chip, S.chipBtn) : S.chip,
-          title: tip,
+          ref: triggerRef,
+          className: 'dsw-att-btn',
+          type: 'button',
+          style: S.chip,
           'aria-label': tip,
+          'aria-haspopup': 'dialog',
+          'aria-expanded': open,
+          onClick: function () { hideTooltip(); setOpen(!open); },
+          onMouseEnter: showTooltip,
+          onMouseLeave: hideTooltip,
+          onFocus: showTooltip,
+          onBlur: hideTooltip,
         };
-        if (clickable) {
-          chipProps.role = 'button';
-          chipProps.tabIndex = 0;
-          chipProps.onClick = function () {
-            // 设置卡打开期间点击不触发打卡，避免调时间时误打卡
-            if (openRef.current) return;
-            clockInNow();
-          };
-          chipProps.onKeyDown = function (e) {
-            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!openRef.current) clockInNow(); }
-          };
-        }
 
         if (st.kind === 'rest' && settings.hideRest) return null;
-        return h('span', {
-          ref: wrapRef,
-          style: S.wrap,
-          onMouseEnter: hoverOpen,
-          onMouseLeave: function () { hoverClose(200); },
-        },
-          h('span', chipProps, h('style', null, CSS), kids),
+        return h('span', { ref: wrapRef, style: S.wrap },
+          h('style', null, CSS),
+          h('button', chipProps, kids),
+          tooltipOpen && !open ? h('span', {
+            ref: tooltipRef,
+            role: 'tooltip',
+            style: Object.assign({}, S.tooltip, tooltipPosition || { visibility: 'hidden', left: 0, top: 0 }),
+          }, tip) : null,
           panel,
         );
       }

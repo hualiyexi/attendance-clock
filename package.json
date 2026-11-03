@@ -1,7 +1,7 @@
 {
   "name": "@hualiyexi/attendance-clock",
-  "version": "1.7.0",
-  "description": "Phase-aware attendance countdowns for the DeepSeek Harness composer: daily overview, actual clock-out, work hours, overtime, lunch mode, and optional reminders.",
+  "version": "1.8.0",
+  "description": "Phase-aware attendance countdowns with a native click-open panel, host-themed light/dark UI, daily overview, repeat clock-out, work hours, overtime, lunch mode, and reminders.",
   "type": "module",
   "license": "MIT",
   "repository": {

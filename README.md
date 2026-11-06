@@ -1,4 +1,4 @@
-# attendance-clock · 打卡倒计时
+# dsh-attendance-clock · 打卡倒计时
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -45,14 +45,14 @@ plugin_manager install_bundle → <本仓库克隆路径>
 **② tarball**（免构建授权，适合分发）：
 
 ```sh
-pnpm pack                                  # 产出 attendance-clock-x.y.z.tgz
-dsh plugin --profile <名称> add ./attendance-clock-x.y.z.tgz
+pnpm pack                                  # 产出 hualiyexi-dsh-attendance-clock-x.y.z.tgz
+dsh plugin --profile <名称> add ./hualiyexi-dsh-attendance-clock-x.y.z.tgz
 ```
 
 **③ GitHub 直装**：
 
 ```sh
-dsh plugin --profile <名称> add github:hualiyexi/attendance-clock
+dsh plugin --profile <名称> add github:hualiyexi/dsh-attendance-clock
 ```
 
 ## 兼容性
@@ -89,7 +89,7 @@ manifest 声明 `engines.dsh: ">=0.2.0-0 <0.3.0-0"`：适配 DSH `0.2.x` 运行�
 ## 目录结构
 
 ```text
-attendance-clock/
+dsh-attendance-clock/
 ├── package.json        # bundle 清单（dsh.bundle.patch + dsh.client + engines.dsh）
 ├── cordis.patch.yml    # Loader patch：插入插件行
 ├── index.js            # Host 半（空实现，渲染在 Client）

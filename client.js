@@ -1,6 +1,6 @@
-/** @hualiyexi/attendance-clock — Client half: phase-aware countdowns, daily overview, clock-in/out, lunch mode, overtime and reminders. */
+/** @hualiyexi/dsh-attendance-clock — Client half: phase-aware countdowns, daily overview, clock-in/out, lunch mode, overtime and reminders. */
 window.__ModuleLoader__.load({
-  id: '@hualiyexi/attendance-clock',
+  id: '@hualiyexi/dsh-attendance-clock',
   factory(require) {
     const React = require('react');
     const h = React.createElement;
@@ -854,7 +854,7 @@ window.__ModuleLoader__.load({
         ctx.slots.inject('conversation.composer.dock', function () {
           return ctx.slots.register({
             name: 'conversation.composer.dock',
-            id: 'attendance-clock',
+            id: 'dsh-attendance-clock',
             order: 9999, // 插槽内部排最后；固定的上下文圆环由 S.wrap.order 越过
             label: '打卡倒计时',
           }, makeChip(ctx));

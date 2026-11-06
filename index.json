@@ -150,6 +150,18 @@
           "engines": {
             "dsh": ">=0.2.0-0 <0.3.0-0"
           }
+        },
+        {
+          "version": "2.0.1",
+          "publishTimestamp": 1793957834,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/hualiyexi/dsh-attendance-clock",
+            "commit": "f42c501b1b8e9c77ac532b465f9d2d465d64aaf2"
+          },
+          "engines": {
+            "dsh": ">=0.2.0-0 <0.3.0-0"
+          }
         }
       ]
     }

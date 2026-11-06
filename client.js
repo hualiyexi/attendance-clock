@@ -481,25 +481,41 @@ window.__ModuleLoader__.load({
       };
     }
 
+    function computeFloatingPosition(a, f, align, previous, viewport) {
+      const margin = 12;
+      const gap = 8;
+      const desiredLeft = align === 'center' ? a.left + a.width / 2 - f.width / 2 : a.right - f.width;
+      const left = Math.max(margin, Math.min(viewport.width - f.width - margin, desiredLeft));
+      let top = a.top - f.height - gap;
+      if (top < margin) top = a.bottom + gap;
+      top = Math.max(margin, Math.min(viewport.height - f.height - margin, top));
+      // fixed 在 transformed 祖先中会以祖先为参照系。根据真实 rect 的差值补偿，
+      // 第二次测量时 f 已位于目标位置，增量归零，因此不会来回抖动。
+      const base = previous || { left: 0, top: 0 };
+      return {
+        left: Math.round(base.left + left - f.left),
+        top: Math.round(base.top + top - f.top),
+      };
+    }
+
     // ContextMeter 同款顶部锚定：gap 8、viewport margin 12；空间不足时转到下方。
     function useFloatingPosition(open, anchorRef, floatingRef, align) {
       const [position, setPosition] = React.useState(null);
+      const positionRef = React.useRef(null);
       React.useLayoutEffect(function () {
-        if (!open) { setPosition(null); return undefined; }
+        if (!open) { positionRef.current = null; setPosition(null); return undefined; }
         function update() {
           const anchor = anchorRef.current;
           const floating = floatingRef.current;
           if (!anchor || !floating) return;
-          const a = anchor.getBoundingClientRect();
-          const f = floating.getBoundingClientRect();
-          const margin = 12;
-          const gap = 8;
-          const desiredLeft = align === 'center' ? a.left + a.width / 2 - f.width / 2 : a.right - f.width;
-          const left = Math.max(margin, Math.min(window.innerWidth - f.width - margin, desiredLeft));
-          let top = a.top - f.height - gap;
-          if (top < margin) top = a.bottom + gap;
-          top = Math.max(margin, Math.min(window.innerHeight - f.height - margin, top));
-          setPosition({ left: Math.round(left), top: Math.round(top) });
+          const next = computeFloatingPosition(
+            anchor.getBoundingClientRect(), floating.getBoundingClientRect(), align, positionRef.current,
+            { width: window.innerWidth, height: window.innerHeight },
+          );
+          const prev = positionRef.current;
+          if (prev && prev.left === next.left && prev.top === next.top) return;
+          positionRef.current = next;
+          setPosition(next);
         }
         update();
         window.addEventListener('resize', update);
@@ -552,7 +568,9 @@ window.__ModuleLoader__.load({
         React.useEffect(function () {
           if (!open) return undefined;
           function onPointerDown(e) {
-            if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+            const inTrigger = wrapRef.current && wrapRef.current.contains(e.target);
+            const inPanel = panelRef.current && panelRef.current.contains(e.target);
+            if (!inTrigger && !inPanel) setOpen(false);
           }
           function onKeyDown(e) {
             if (e.key === 'Escape') {

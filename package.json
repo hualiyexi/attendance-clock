@@ -1,6 +1,6 @@
 {
   "name": "@hualiyexi/dsh-attendance-clock",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Phase-aware attendance countdowns with a native click-open panel, host-themed light/dark UI, daily overview, repeat clock-out, work hours, overtime, lunch mode, and reminders.",
   "type": "module",
   "license": "MIT",

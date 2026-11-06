@@ -12,18 +12,18 @@
     {
       "name": "@hualiyexi/attendance-clock",
       "title": {
-        "en": "Attendance Clock",
-        "zh": "打卡倒计时"
+        "en": "Attendance Clock (legacy name)",
+        "zh": "打卡倒计时（旧包名）"
       },
       "description": {
-        "en": "Phase-aware attendance countdowns with a daily overview, actual clock-out, work-hour and overtime totals, lunch mode, and optional reminders.",
-        "zh": "按阶段显示考勤倒计时，支持今日概览、实际下班打卡、工时与加班统计、午休模式和独立提醒开关。"
+        "en": "Renamed to @hualiyexi/dsh-attendance-clock; these versions install from the same repository's history under its previous name.",
+        "zh": "已更名为 @hualiyexi/dsh-attendance-clock；以下历史版本仍按旧名从同一仓库安装。"
       },
       "icon": "icon.svg",
       "author": "hualiyexi",
-      "homepage": "https://github.com/hualiyexi/attendance-clock",
+      "homepage": "https://github.com/hualiyexi/dsh-attendance-clock",
       "repository": {
-        "url": "https://github.com/hualiyexi/attendance-clock"
+        "url": "https://github.com/hualiyexi/dsh-attendance-clock"
       },
       "metadata": {
         "keywords": [
@@ -42,7 +42,7 @@
           "publishTimestamp": 1793686360,
           "source": {
             "type": "git",
-            "url": "https://github.com/hualiyexi/attendance-clock",
+            "url": "https://github.com/hualiyexi/dsh-attendance-clock",
             "commit": "a01f3e764e9fbcbaa2f83a87bcf1bdf8af83da86"
           },
           "engines": {
@@ -54,7 +54,7 @@
           "publishTimestamp": 1793692190,
           "source": {
             "type": "git",
-            "url": "https://github.com/hualiyexi/attendance-clock",
+            "url": "https://github.com/hualiyexi/dsh-attendance-clock",
             "commit": "fb551656801b407b76bfe0bac7efe4cdb5062c43"
           },
           "engines": {
@@ -66,7 +66,7 @@
           "publishTimestamp": 1793693121,
           "source": {
             "type": "git",
-            "url": "https://github.com/hualiyexi/attendance-clock",
+            "url": "https://github.com/hualiyexi/dsh-attendance-clock",
             "commit": "f3b05ea5b2da00a8480fe32f45f7e84d2eb129a0"
           },
           "engines": {
@@ -78,7 +78,7 @@
           "publishTimestamp": 1793702746,
           "source": {
             "type": "git",
-            "url": "https://github.com/hualiyexi/attendance-clock",
+            "url": "https://github.com/hualiyexi/dsh-attendance-clock",
             "commit": "f912321076a1aa7811aaaf81237c4ac269ebb669"
           },
           "engines": {
@@ -90,7 +90,7 @@
           "publishTimestamp": 1793703170,
           "source": {
             "type": "git",
-            "url": "https://github.com/hualiyexi/attendance-clock",
+            "url": "https://github.com/hualiyexi/dsh-attendance-clock",
             "commit": "7b2c30751e2585902cca837821921854cadc079f"
           },
           "engines": {
@@ -102,8 +102,50 @@
           "publishTimestamp": 1793704644,
           "source": {
             "type": "git",
-            "url": "https://github.com/hualiyexi/attendance-clock",
+            "url": "https://github.com/hualiyexi/dsh-attendance-clock",
             "commit": "fc206f3d0038e73e3cec0982b7d8d65c647c1e38"
+          },
+          "engines": {
+            "dsh": ">=0.2.0-0 <0.3.0-0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "@hualiyexi/dsh-attendance-clock",
+      "title": {
+        "en": "Attendance Clock",
+        "zh": "打卡倒计时"
+      },
+      "description": {
+        "en": "Phase-aware attendance countdowns with a daily overview, actual clock-out, work-hour and overtime totals, lunch mode, and optional reminders.",
+        "zh": "按阶段显示考勤倒计时，支持今日概览、实际下班打卡、工时与加班统计、午休模式和独立提醒开关。"
+      },
+      "icon": "icon.svg",
+      "author": "hualiyexi",
+      "homepage": "https://github.com/hualiyexi/dsh-attendance-clock",
+      "repository": {
+        "url": "https://github.com/hualiyexi/dsh-attendance-clock"
+      },
+      "metadata": {
+        "keywords": [
+          "打卡",
+          "考勤",
+          "attendance",
+          "clock-in",
+          "countdown",
+          "chip",
+          "composer"
+        ]
+      },
+      "versions": [
+        {
+          "version": "2.0.0",
+          "publishTimestamp": 1793943937,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/hualiyexi/dsh-attendance-clock",
+            "commit": "91b6ce87a3b446c5d2185e83f2c9b827a3fa9e43"
           },
           "engines": {
             "dsh": ">=0.2.0-0 <0.3.0-0"
